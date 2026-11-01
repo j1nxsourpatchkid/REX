@@ -1,507 +1,1015 @@
-REX — REVERSE ENGINEERING EXPLORER COMMAND REFERENCE =================
+# REX — Command Reference
 
-This document explains the commands currently available in REX, how to
-use them, and what each command does.
+This document explains the commands currently available in REX, how to use them, and what each command does.
 
 REX has two command environments:
 
-1.  CLI COMMANDS Run these from PowerShell, Command Prompt, or Bash
-    using: rex [options]
+1. **CLI Commands:** Run these from PowerShell, Command Prompt, or Bash using `rex [command]`.
+2. **Interactive Explorer Commands:** Run these after launching `rex explore <path>`.
 
-2.  INTERACTIVE EXPLORER COMMANDS Run these after launching: rex explore
+The explorer provides its own prompt, typically:
 
-    The explorer provides its own prompt, typically: rex [0xENTRY]>
+```text
+rex [0x140001000]>
+```
 
-    Commands entered here are explorer commands, not normal terminal
-    commands.
+Commands entered here are explorer commands, not normal terminal commands.
 
-PART 1 — CLI COMMANDS
+# Part 1 — CLI Commands
 
-1. EXPLORE
+## 1. EXPLORE
 
-Usage: rex explore
+**Usage:**
 
-What it does: Opens the interactive terminal explorer for the specified
-executable or binary. REX pre-computes and caches analysis data in
-memory, then opens an interactive prompt where you can inspect sections,
-disassemble code, search results, follow cross-references, jump to
-addresses, and create bookmarks.
+```bash
+rex explore <path>
+```
 
-Example: rex explore program.exe
+**What it does:**
 
-Starting REX without arguments: rex
+Opens the interactive terminal explorer for the specified executable or binary. REX pre-computes and caches analysis data in memory, then opens an interactive prompt where you can inspect sections, disassemble code, search results, follow cross-references, jump to addresses, browse functions, and create bookmarks.
 
-    Running REX without arguments prompts you to enter a file path and then
-    launches the interactive explorer.
+**Example:**
 
-2. INVESTIGATE
+```bash
+rex explore program.exe
+```
 
-Usage: rex investigate
+**Starting REX without arguments:**
 
-What it does: Runs a combined investigation using multiple REX analysis
-modules. This is the main all-in-one analysis command.
+Running REX without arguments prompts you to enter a file path and then launches the interactive explorer.
 
-    The investigation:
-    - Calculates MD5, SHA-1, SHA-256, and SHA-512 hashes.
-    - Inspects binary format, sections, structure, and Shannon entropy.
-    - Fingerprints compiler and linker indicators, checks for packer
-      signatures, and extracts available PDB debug paths.
-    - Summarizes dynamic libraries, import counts, and export counts.
-    - Disassembles instructions at the entry point and estimates basic blocks.
-    - Extracts strings and identifies URL and filesystem path indicators.
-    - Correlates results across modules and produces findings labelled
-      FACT, PROBABLE, or SPECULATIVE.
-    - Records the investigation in the local .rex_history file.
+## 2. INVESTIGATE
 
-Example: rex investigate program.exe
+**Usage:**
 
-3. BINARY
+```bash
+rex investigate <path>
+```
 
-Usage: rex binary
+**What it does:**
 
-What it does: Inspects the binary’s format and basic executable
-structure. Supported formats include PE, ELF, and Mach-O.
+Runs a combined investigation using multiple REX analysis modules. This is the main all-in-one analysis command.
 
-    Reports information such as:
-    - CPU architecture, including x86, x64, and ARM where identified.
-    - Endianness and file size.
-    - Entry-point virtual address.
-    - Cryptographic hashes.
-    - Section names, virtual addresses, raw sizes, and Shannon entropy.
-    - Heuristic section classifications: PACKED, SPARSE, or NORMAL.
+The investigation:
 
-Example: rex binary program.exe
+- Calculates MD5, SHA-1, SHA-256, and SHA-512 hashes.
+- Inspects binary format, sections, structure, and Shannon entropy.
+- Fingerprints compiler and linker indicators, checks for packer signatures, and extracts available PDB debug paths.
+- Summarizes dynamic libraries, import counts, and export counts.
+- Disassembles instructions at the entry point and estimates basic blocks.
+- Extracts strings and identifies URL and filesystem path indicators.
+- Correlates results across modules and produces findings labelled FACT, PROBABLE, or SPECULATIVE.
+- Generates Evidence Chains connecting technical indicators to correlated conclusions.
+- Categorizes recognized imported APIs by behavioral classification.
+- Records the investigation in the local `.rex_history` file.
 
-4. FINGERPRINT
+**Example:**
 
-Usage: rex fingerprint
+```bash
+rex investigate program.exe
+```
 
-What it does: Searches for compiler, linker, and packer indicators that
-may reveal information about how a binary was built.
+## 3. BINARY
 
-    It can:
-    - Identify indicators associated with Rust (rustc), Go (gc), GCC,
-      Clang/LLVM, and MSVC.
-    - Check for Microsoft Rich Header data, including Rich/DanS information.
-    - Search for known packer signatures such as UPX and Aspack.
-    - Parse CodeView RSDS debug information and extract an embedded PDB path
-      when present.
+**Usage:**
 
-Example: rex fingerprint program.exe
+```bash
+rex binary <path>
+```
 
-5. DEPS
+**What it does:**
 
-Usage: rex deps
+Inspects the binary's format and basic executable structure. Supported formats include PE, ELF, and Mach-O.
 
-What it does: Inspects the binary’s dynamic dependencies and symbol
-information.
+Reports information such as:
 
-    It can display:
-    - Dynamically linked DLLs and shared libraries.
-    - Imported API functions.
-    - Exported ABI symbols and their virtual addresses.
+- CPU architecture, including x86, x64, and ARM where identified.
+- Endianness and file size.
+- Entry-point virtual address.
+- Cryptographic hashes.
+- Section names, virtual addresses, raw sizes, and Shannon entropy.
+- Heuristic section classifications: PACKED, SPARSE, or NORMAL.
 
-    In text output, the import list may be limited to the first 200 entries.
+**Example:**
 
-Example: rex deps program.exe
+```bash
+rex binary program.exe
+```
 
-6. DISASM
+## 4. FINGERPRINT
 
-Usage: rex disasm [–count ]
+**Usage:**
 
-What it does: Disassembles machine code starting at the binary’s entry
-point using iced-x86 and Intel syntax.
+```bash
+rex fingerprint <path>
+```
 
-    For supported PE files, REX can resolve Import Address Table (IAT)
-    references and show imported function names alongside relevant
-    instructions.
+**What it does:**
 
-    The output can include:
-    - Instruction addresses and byte encodings.
-    - Decoded assembly instructions.
-    - Recognized function prologues and epilogues.
-    - Recognized GS stack-cookie and synchronization-lock patterns.
-    - Opcode distribution statistics.
-    - Jump, call, and estimated basic-block information.
+Searches for compiler, linker, and packer indicators that may reveal information about how a binary was built.
 
-Options: –count Number of instructions to decode. Default: 30.
+It can:
 
-Examples: rex disasm program.exe rex disasm program.exe –count 100
+- Identify indicators associated with Rust (rustc), Go (gc), GCC, Clang/LLVM, and MSVC.
+- Check for Microsoft Rich Header data, including Rich/DanS information.
+- Search for known packer signatures such as UPX and Aspack.
+- Parse CodeView RSDS debug information and extract an embedded PDB path when present.
 
-7. STRINGS
+**Example:**
 
-Usage: rex strings [–min ] [–limit ]
+```bash
+rex fingerprint program.exe
+```
 
-What it does: Extracts contiguous printable strings from a file in ASCII
-and UTF-16LE encodings.
+## 5. DEPS
 
-    REX can also identify and tally indicators such as:
-    - URLs beginning with http:// or https://.
-    - Windows and Unix-style filesystem paths.
-    - File and library references such as .dll.
+**Usage:**
 
-Options: –min Minimum string length. Default: 4. –limit Maximum number
-of strings displayed. Default: 100.
+```bash
+rex deps <path>
+```
 
-Examples: rex strings program.exe rex strings program.exe –min 6 rex
-strings program.exe –min 5 –limit 250
+**What it does:**
 
-8. DIFF
+Inspects the binary's dynamic dependencies and symbol information.
 
-Usage: rex diff
+It can display:
 
-What it does: Compares two binary files and reports information about
-their differences and structural changes.
+- Dynamically linked DLLs and shared libraries.
+- Imported API functions.
+- Exported ABI symbols and their virtual addresses.
+- Behavioral categories assigned to recognized imported APIs.
 
-    It can:
-    - Compare file sizes and calculate the size delta.
-    - Calculate byte-level similarity.
-    - Check whether the files are bitwise identical.
-    - Compare entry-point addresses.
-    - Compare section geometry and report size changes for matching sections.
-    - Identify exported functions added to or removed from the second file.
+Recognized API categories include:
 
-Examples: rex diff old.exe new.exe rex diff version1.dll version2.dll
+- Network / Socket
+- Process / Thread Control
+- Process Injection
+- Virtual Memory Allocation
+- File System Access
+- Registry Configuration
+- Cryptography / Hashing
+- Anti-Analysis / Debug Check
+- Reconnaissance / System Information
+- General Runtime
 
-9. MEMORY
+These categories describe the operational areas associated with recognized APIs. They do not independently prove that a particular behavior occurs.
 
-Usage: rex memory
+In text output, the import list may be limited to the first 200 entries.
 
-What it does: Analyzes a raw memory dump by dividing it into 64 KB
-chunks.
+**Example:**
 
-    REX scans aligned 8-byte values for candidate 64-bit virtual pointers,
-    including values in recognized user-space and kernel-space address
-    ranges. It calculates pointer density for each chunk and uses heuristics
-    to classify regions.
+```bash
+rex deps program.exe
+```
 
-    Possible classifications include:
-    - Zero / Sparse Page
-    - Pointer-Dense (possible structures or vtables)
-    - High Entropy (possibly compressed or encrypted data)
-    - Standard Data / Heap
+## 6. DISASM
 
-    These are heuristic classifications, not definitive identifications
-    of what a memory region contains.
+**Usage:**
 
-Example: rex memory memory_dump.bin
+```bash
+rex disasm <path> [--count N]
+```
 
-10. PCAP
+**What it does:**
 
-Usage: rex pcap
+Disassembles machine code starting at the binary's entry point using iced-x86 and Intel syntax.
 
-What it does: Parses an offline PCAP network packet capture.
+For supported PE files, REX can resolve Import Address Table (IAT) references and show imported function names alongside relevant instructions.
 
-    Supported packet and network formats include:
-    - Ethernet frames.
-    - IPv4 and IPv6.
-    - ARP and ICMP.
-    - TCP and UDP.
+The output can include:
 
-    REX identifies common application protocols using familiar port
-    numbers, including HTTP on port 80, TLS on port 443, and DNS on port 53.
+- Instruction addresses and byte encodings.
+- Decoded assembly instructions.
+- Recognized function prologues and epilogues.
+- Recognized GS stack-cookie and synchronization-lock patterns.
+- Opcode distribution statistics.
+- Jump, call, and estimated basic-block information.
 
-    The output includes packet identifiers, timestamps, lengths, source and
-    destination information, and protocol distribution statistics.
+**Options:**
 
-    This command parses PCAP captures. PCAPNG support should not be assumed.
+- `--count N`: Number of instructions to decode. Default: 30.
 
-Example: rex pcap capture.pcap
+**Examples:**
 
-11. PROTOCOL
+```bash
+rex disasm program.exe
+rex disasm program.exe --count 100
+```
 
-Usage: rex protocol
+## 7. STRINGS
 
-What it does: Examines a raw binary stream or unknown data file for
-possible protocol structure and framing patterns.
+**Usage:**
 
-    It can:
-    - Extract potential magic or preamble bytes.
-    - Look for CRLF delimiters.
-    - Check for possible big-endian length-prefixed framing.
-    - Examine raw-stream patterns.
-    - Sample 4-byte fields and look for indicators such as HTTP headers,
-      TLS records, null padding, or structured payload blocks.
+```bash
+rex strings <path> [--min N] [--limit N]
+```
 
-    The results are structural hypotheses. They do not automatically prove
-    that a file uses a particular protocol.
+**What it does:**
 
-Example: rex protocol unknown_data.bin
+Extracts contiguous printable strings from a file in ASCII and UTF-16LE encodings.
 
-12. CARVE
+REX can also identify and tally indicators such as:
 
-Usage: rex carve
+- URLs beginning with `http://` or `https://`.
+- Windows and Unix-style filesystem paths.
+- File and library references such as `.dll`.
 
-What it does: Searches raw binary data for known file signatures that
-may indicate embedded or nested files. It reports the offsets where
-matching signatures are found.
+**Options:**
 
-    Recognized signatures include:
-    - PNG
-    - JPEG
-    - GIF87a and GIF89a
-    - PDF
-    - ZIP / JAR
-    - Embedded PE files (MZ)
-    - Embedded ELF files
-    - 7-Zip
-    - RAR
+- `--min N`: Minimum string length. Default: 4.
+- `--limit N`: Maximum number of strings displayed. Default: 100.
 
-Example: rex carve firmware.bin
+**Examples:**
 
-13. SCAN
+```bash
+rex strings program.exe
+rex strings program.exe --min 6
+rex strings program.exe --min 5 --limit 250
+```
 
-Usage: rex scan
+## 8. DIFF
 
-What it does: Scans files located directly inside the specified
-directory and identifies file types using their magic bytes.
+**Usage:**
 
-    Recognized types include PE, ELF, Mach-O, and PCAP.
+```bash
+rex diff <first> <second>
+```
 
-    REX also reports file sizes and uses Shannon entropy as a heuristic
-    to flag potentially packed or compressed binaries. An entropy value
-    above 7.2 is treated as a PACKED indicator.
+**What it does:**
 
-    This command scans the directory's immediate files; it does not
-    recursively traverse subdirectories.
+Compares two binary files and reports information about their differences and structural changes.
 
-Example: rex scan ./samples
+It can:
 
-14. SEARCH
+- Compare file sizes and calculate the size delta.
+- Calculate byte-level similarity.
+- Check whether the files are bitwise identical.
+- Compare entry-point addresses.
+- Compare section geometry and report size changes for matching sections.
+- Identify exported functions added to or removed from the second file.
 
-Usage: rex search
+**Examples:**
 
-What it does: Searches a file’s raw bytes for the supplied query.
+```bash
+rex diff old.exe new.exe
+rex diff version1.dll version2.dll
+```
 
-    It reports matching byte offsets and surrounding context, including
-    an ASCII preview. The output displays up to 100 matches.
+## 9. MEMORY
 
-Examples: rex search program.exe kernel32 rex search firmware.bin config
+**Usage:**
 
-15. HISTORY
+```bash
+rex memory <path>
+```
 
-Usage: rex history
+**What it does:**
 
-What it does: Reads and displays the local .rex_history file. The
-history contains previous targets analyzed using rex investigate.
+Analyzes a raw memory dump by dividing it into 64 KB chunks.
 
-Example: rex history
+REX scans aligned 8-byte values for candidate 64-bit virtual pointers, including values in recognized user-space and kernel-space address ranges. It calculates pointer density for each chunk and uses heuristics to classify regions.
 
-CLI OUTPUT FORMATS
+Possible classifications include:
 
-Some commands accept the –format or -f option to select an output
-format.
+- Zero / Sparse Page
+- Pointer-Dense
+- High Entropy
+- Standard Data / Heap
 
-Available formats: -f text Plain-text output (default). -f json JSON
-output. -f markdown Markdown output. -f md Markdown output. -f html HTML
-output. -f htm HTML output. -f csv CSV output.
+These are heuristic classifications, not definitive identifications of what a memory region contains.
 
-JSON output is supported across the CLI commands. Markdown, HTML, and
-CSV reporting are supported by the investigate command. Other commands
-fall back to plain text for formats they do not implement.
+**Example:**
 
-Examples: rex investigate program.exe –format json rex investigate
-program.exe -f html rex investigate program.exe -f csv rex binary
-program.exe -f json
+```bash
+rex memory memory_dump.bin
+```
 
-PART 2 — INTERACTIVE EXPLORER COMMANDS
+## 10. PCAP
+
+**Usage:**
+
+```bash
+rex pcap <path>
+```
+
+**What it does:**
+
+Parses an offline PCAP network packet capture.
+
+Supported packet and network formats include:
+
+- Ethernet frames.
+- IPv4 and IPv6.
+- ARP and ICMP.
+- TCP and UDP.
+
+REX identifies common application protocols using familiar port numbers, including HTTP on port 80, TLS on port 443, and DNS on port 53.
+
+The output includes packet identifiers, timestamps, lengths, source and destination information, and protocol distribution statistics.
+
+This command parses classic PCAP captures. PCAPNG support should not be assumed.
+
+**Example:**
+
+```bash
+rex pcap capture.pcap
+```
+
+## 11. PROTOCOL
+
+**Usage:**
+
+```bash
+rex protocol <path>
+```
+
+**What it does:**
+
+Examines a raw binary stream or unknown data file for possible protocol structure and framing patterns.
+
+It can:
+
+- Extract potential magic or preamble bytes.
+- Look for CRLF delimiters.
+- Check for possible big-endian length-prefixed framing.
+- Examine raw-stream patterns.
+- Sample 4-byte fields and look for indicators such as HTTP headers, TLS records, null padding, or structured payload blocks.
+
+The results are structural hypotheses. They do not automatically prove that a file uses a particular protocol.
+
+**Example:**
+
+```bash
+rex protocol unknown_data.bin
+```
+
+## 12. CARVE
+
+**Usage:**
+
+```bash
+rex carve <path>
+```
+
+**What it does:**
+
+Searches raw binary data for known file signatures that may indicate embedded or nested files. It reports the offsets where matching signatures are found.
+
+Recognized signatures include:
+
+- PNG
+- JPEG
+- GIF87a and GIF89a
+- PDF
+- ZIP / JAR
+- Embedded PE files (MZ)
+- Embedded ELF files
+- 7-Zip
+- RAR
+
+The command reports detected signatures and offsets. It does not guarantee complete extraction or reconstruction of embedded files.
+
+**Example:**
+
+```bash
+rex carve firmware.bin
+```
+
+## 13. SCAN
+
+**Usage:**
+
+```bash
+rex scan <directory>
+```
+
+**What it does:**
+
+Scans files located directly inside the specified directory and identifies file types using their magic bytes.
+
+Recognized types include PE, ELF, Mach-O, and PCAP.
+
+REX also reports file sizes and uses Shannon entropy as a heuristic to flag potentially packed or compressed binaries. An entropy value above 7.2 is treated as a PACKED indicator.
+
+This command scans the directory's immediate files; it does not recursively traverse subdirectories.
+
+**Example:**
+
+```bash
+rex scan ./samples
+```
+
+## 14. SEARCH
+
+**Usage:**
+
+```bash
+rex search <path> <query>
+```
+
+**What it does:**
+
+Searches a file's raw bytes for the supplied query.
+
+It reports matching byte offsets and surrounding context, including an ASCII preview. The output displays up to 100 matches.
+
+**Examples:**
+
+```bash
+rex search program.exe kernel32
+rex search firmware.bin config
+```
+
+## 15. HISTORY
+
+**Usage:**
+
+```bash
+rex history
+```
+
+**What it does:**
+
+Reads and displays the local `.rex_history` file. The history contains previous targets analyzed using `rex investigate`.
+
+**Example:**
+
+```bash
+rex history
+```
+
+## 16. FUNCTION
+
+**Usage:**
+
+```bash
+rex function <path> [--address <hex>]
+```
+
+**What it does:**
+
+Generates a comprehensive function-level intelligence report for a discovered or specified virtual address.
+
+If `--address` is omitted, REX analyzes the binary's entry point by default.
+
+The report can include:
+
+- Function boundaries, estimated byte size, and instruction count.
+- Basic block count and execution branch counts.
+- Incoming callers and references.
+- Outgoing function calls.
+- Resolved imported APIs with behavioral categories.
+- Read-only data strings referenced directly by instructions within the function.
+- Confidence classifications.
+
+This command connects function discovery, disassembly, cross-reference analysis, API categorization, and other available findings into one report.
+
+**Examples:**
+
+```bash
+rex function program.exe
+rex function program.exe --address 0x140001000
+```
+
+## 17. FUNCS
+
+**Usage:**
+
+```bash
+rex funcs <path>
+```
+
+**What it does:**
+
+Discovers potential unexported function boundaries across executable sections.
+
+It displays discovered function information, including:
+
+- Virtual addresses.
+- Generated function names.
+- Confidence classifications.
+- Caller counts.
+
+Function discovery is based on recognizable code patterns and structural indicators. Identified boundaries are estimates and should not automatically be treated as definitive function boundaries.
+
+**Example:**
+
+```bash
+rex funcs program.exe
+```
+
+## 18. CFG
+
+**Usage:**
+
+```bash
+rex cfg <path> [--address <hex>]
+```
+
+**What it does:**
+
+Generates and renders an ASCII Control Flow Graph for a function.
+
+The diagram represents basic blocks and their relationships, including jump edges, conditional branches, fallthrough paths, and instruction flows.
+
+**Examples:**
+
+```bash
+rex cfg program.exe
+rex cfg program.exe --address 0x140001000
+```
+
+## 19. HEX
+
+**Usage:**
+
+```bash
+rex hex <path> [--offset <hex>] [--length <N>]
+```
+
+**What it does:**
+
+Displays a hexadecimal dump of the specified file region with an aligned ASCII side-pane.
+
+This allows raw binary bytes and their printable character representations to be inspected together.
+
+**Options:**
+
+- `--offset <hex>`: Starting file offset. Defaults to 0.
+- `--length N`: Number of bytes to display.
+
+**Example:**
+
+```bash
+rex hex program.exe --offset 0 --length 128
+```
+
+# CLI Output Formats
+
+Some commands accept the `--format` or `-f` option to select an output format.
+
+Available formats:
+
+| Option | Output |
+|---|---|
+| `-f text` | Plain-text output (default) |
+| `-f json` | JSON output |
+| `-f markdown` | Markdown output |
+| `-f md` | Markdown output |
+| `-f html` | HTML output |
+| `-f htm` | HTML output |
+| `-f csv` | CSV output |
+
+JSON output is supported across the CLI commands. Markdown, HTML, and CSV reporting are supported by the `investigate` command. Other commands fall back to plain text for formats they do not implement.
+
+**Examples:**
+
+```bash
+rex investigate program.exe --format json
+rex investigate program.exe -f html
+rex investigate program.exe -f csv
+rex binary program.exe -f json
+```
+
+# Part 2 — Interactive Explorer Commands
 
 Launch the explorer from your terminal with:
 
-    rex explore <path>
+```bash
+rex explore <path>
+```
 
-Once the explorer opens, commands are entered at its interactive prompt.
-The prompt displays the current navigation address, for example:
+Once the explorer opens, commands are entered at its interactive prompt. The prompt displays the current navigation address, for example:
 
-    rex [0x140001000]>
+```text
+rex [0x140001000]>
+```
 
-The commands below are entered inside this prompt, not directly into
-PowerShell, Command Prompt, or Bash.
+The commands below are entered inside this prompt, not directly into PowerShell, Command Prompt, or Bash.
 
-1. OVERVIEW
+## 1. OVERVIEW
 
-Usage: overview 1
+**Usage:**
 
-What it does: Displays the binary’s main metadata, including format,
-architecture, hashes, and entry-point information.
+```text
+overview
+1
+```
 
-Example: rex [0x140001000]> overview
+**What it does:**
 
-2. SECTIONS
+Displays the binary's main metadata, including format, architecture, hashes, and entry-point information.
 
-Usage: sections 2
+**Example:**
 
-What it does: Displays the binary’s section table, including section
-names, virtual addresses, raw sizes, Shannon entropy, and heuristic
-packing classifications.
+```text
+rex [0x140001000]> overview
+```
 
-Example: rex [0x140001000]> sections
+## 2. SECTIONS
 
-3. DISASM
+**Usage:**
 
-Usage: disasm [N] 3
+```text
+sections
+2
+```
 
-What it does: Disassembles instructions starting at the current
-navigation address. PE IAT references can be resolved to imported
-function names inline.
+**What it does:**
 
-Options: [N] Number of instructions to display. Default: 15.
+Displays the binary's section table, including section names, virtual addresses, raw sizes, Shannon entropy, and heuristic packing classifications.
 
-Examples: rex [0x140001000]> disasm rex [0x140001000]> disasm 40
+**Example:**
 
-4. JUMP
+```text
+rex [0x140001000]> sections
+```
 
-Usage: jump goto
+## 3. DISASM
 
-What it does: Changes the current navigation address to the specified
-hexadecimal virtual address and displays the first 10 instructions at
-that location.
+**Usage:**
 
-Example: rex [0x140001000]> jump 140002000
+```text
+disasm [N]
+3
+```
 
-5. XREF
+**What it does:**
 
-Usage: xref xrefs
+Disassembles instructions starting at the current navigation address. PE IAT references can be resolved to imported function names inline.
 
-What it does: Searches code sections for calls or IP-relative references
-targeting the supplied API name or address. This helps locate code that
-references an imported function or a specific address.
+**Options:**
 
-Examples: rex [0x140001000]> xref GetModuleHandle rex [0x140001000]>
-xref 140002040
+- `[N]`: Number of instructions to display. Default: 15.
 
-6. DEPS
+**Examples:**
 
-Usage: deps 4
+```text
+rex [0x140001000]> disasm
+rex [0x140001000]> disasm 40
+```
 
-What it does: Displays the binary’s dynamic libraries, imported APIs,
-and exported symbols.
+## 4. JUMP
 
-Example: rex [0x140001000]> deps
+**Usage:**
 
-7. STRINGS
+```text
+jump <hex>
+goto
+```
 
-Usage: strings [filter] 5
+**What it does:**
 
-What it does: Displays extracted strings from the binary. An optional
-filter limits the displayed results to strings containing the supplied
-keyword.
+Changes the current navigation address to the specified hexadecimal virtual address and displays the first 10 instructions at that location.
 
-Examples: rex [0x140001000]> strings rex [0x140001000]> strings http
+**Example:**
 
-8. CARVE
+```text
+rex [0x140001000]> jump 140002000
+```
 
-Usage: carve 6
+## 5. XREF
 
-What it does: Lists embedded files detected by the binary carving
-module, along with their detected types and offsets.
+**Usage:**
 
-Example: rex [0x140001000]> carve
+```text
+xref <term>
+xrefs
+```
 
-9. FINDINGS
+**What it does:**
 
-Usage: findings 7
+Searches code sections for calls or IP-relative references targeting the supplied API name or address. This helps locate code that references an imported function or a specific address.
 
-What it does: Displays conclusions produced by the cross-module
-correlation engine. Findings are labelled FACT, PROBABLE, or SPECULATIVE
-according to the confidence assigned to each conclusion.
+**Examples:**
 
-Example: rex [0x140001000]> findings
+```text
+rex [0x140001000]> xref GetModuleHandle
+rex [0x140001000]> xref 140002040
+```
 
-10. FIND
+## 6. DEPS
 
-Usage: find search
+**Usage:**
 
-What it does: Searches across multiple types of investigation results,
-including imported APIs, extracted strings, and correlated findings.
+```text
+deps
+4
+```
 
-Examples: rex [0x140001000]> find CreateFile rex [0x140001000]> find
-https
+**What it does:**
 
-11. MARK
+Displays the binary's dynamic libraries, imported APIs, and exported symbols.
 
-Usage: mark
+Recognized imported APIs are also grouped into behavioral categories, providing additional context about their operational purpose.
+
+**Example:**
+
+```text
+rex [0x140001000]> deps
+```
+
+## 7. STRINGS
+
+**Usage:**
+
+```text
+strings [filter]
+5
+```
+
+**What it does:**
+
+Displays extracted strings from the binary. An optional filter limits the displayed results to strings containing the supplied keyword.
+
+**Examples:**
+
+```text
+rex [0x140001000]> strings
+rex [0x140001000]> strings http
+```
+
+## 8. CARVE
+
+**Usage:**
+
+```text
+carve
+6
+```
+
+**What it does:**
+
+Lists embedded files detected by the binary carving module, along with their detected types and offsets.
+
+**Example:**
+
+```text
+rex [0x140001000]> carve
+```
+
+## 9. FINDINGS
+
+**Usage:**
+
+```text
+findings
+7
+```
+
+**What it does:**
+
+Displays conclusions produced by the cross-module correlation engine.
+
+Findings are labelled FACT, PROBABLE, or SPECULATIVE according to the confidence assigned to each conclusion. Evidence Chains provide additional context about the technical indicators supporting those conclusions.
+
+**Example:**
+
+```text
+rex [0x140001000]> findings
+```
+
+## 10. FIND
+
+**Usage:**
+
+```text
+find <query>
+search
+```
+
+**What it does:**
+
+Searches across multiple types of investigation results, including imported APIs, extracted strings, and correlated findings.
+
+**Examples:**
+
+```text
+rex [0x140001000]> find CreateFile
+rex [0x140001000]> find https
+```
+
+## 11. MARK
+
+**Usage:**
+
+```text
+mark <hex> <note>
 bookmark
-What it does: Saves a virtual address as a bookmark with a custom text
-note. Bookmarks let you keep track of addresses you may want to revisit
-during the current explorer session.
+```
 
-Example: rex [0x140001000]> mark 140002040 Possible initialization
-routine
+**What it does:**
 
-12. MARKS
+Saves a virtual address as a bookmark with a custom text note.
 
-Usage: marks bookmarks
+Bookmarks are automatically serialized to `.rex_bookmarks.json` in the working directory. They persist between explorer sessions and are reloaded when the explorer is opened again.
 
-What it does: Lists the bookmarks and notes created during the current
-explorer session.
+**Example:**
 
-Example: rex [0x140001000]> marks
+```text
+rex [0x140001000]> mark 140002040 Possible initialization routine
+```
 
-13. HELP
+## 12. MARKS
 
-Usage: help
+**Usage:**
 
-What it does: Displays the interactive explorer command reference.
+```text
+marks
+bookmarks
+```
 
-Example: rex [0x140001000]> help
+**What it does:**
 
-14. QUIT
+Lists saved bookmarks and their associated notes, including bookmarks loaded from previous sessions.
 
-Usage: quit q exit
+**Example:**
 
-What it does: Closes the interactive explorer session and returns to the
-terminal.
+```text
+rex [0x140001000]> marks
+```
 
-Example: rex [0x140001000]> quit
+## 13. FUNCS
 
-QUICK REFERENCE
+**Usage:**
 
-CLI COMMANDS
+```text
+funcs
+functions
+```
 
-    rex explore <path>                  Open interactive explorer
-    rex investigate <path>              Run a full investigation
-    rex binary <path>                   Inspect binary structure
-    rex fingerprint <path>              Identify compiler/toolchain clues
-    rex deps <path>                     Inspect dependencies and symbols
-    rex disasm <path> [--count N]       Disassemble from entry point
-    rex strings <path> [--min N]        Extract strings
-    rex diff <first> <second>           Compare two binaries
-    rex memory <path>                  Analyze a memory dump
-    rex pcap <path>                    Parse a PCAP capture
-    rex protocol <path>                Inspect possible protocol structure
-    rex carve <path>                   Find embedded file signatures
-    rex scan <directory>               Scan immediate directory contents
-    rex search <path> <query>           Search raw file bytes
-    rex history                         View investigation history
+**What it does:**
 
-INTERACTIVE EXPLORER COMMANDS
+Lists discovered function boundaries across executable sections.
 
-    overview                            Show binary overview
-    sections                            List binary sections
-    disasm [N]                          Disassemble at current address
-    jump <hex>                          Navigate to an address
-    xref <term>                         Find references to an API or address
-    deps                                View dependencies and symbols
-    strings [filter]                    Browse extracted strings
-    carve                               List embedded files
-    findings                            View correlated findings
-    find <query>                        Search analysis results
-    mark <hex> <note>                   Create an address bookmark
-    marks                               List session bookmarks
-    help                                Show explorer help
-    quit                                Exit the explorer
+The output includes virtual addresses, generated names, confidence classifications, and caller counts.
 
-NOTES
+**Example:**
 
--   REX is an analysis toolkit. Several outputs, including entropy-based
-    packing classifications, memory-region classifications, and protocol
-    structure hypotheses, are heuristic and should be interpreted as
-    indicators rather than definitive conclusions.
--   PCAP parsing and PCAPNG parsing are not interchangeable. The pcap
-    command currently describes legacy PCAP capture parsing.
--   Directory scanning currently covers files directly inside the
-    supplied directory, not nested subdirectories.
--   Markdown, HTML, and CSV output formats are implemented for full
-    investigations. Other commands may use plain-text output when a
-    requested format is not supported.
+```text
+rex [0x140001000]> funcs
+```
+
+## 14. FUNC
+
+**Usage:**
+
+```text
+func <addr>
+fn
+```
+
+**What it does:**
+
+Runs a detailed function-level intelligence report for the specified virtual address. If no address is supplied, it uses the current navigation address.
+
+The report can include function size, instruction count, basic blocks, branches, incoming callers, outgoing calls, imported APIs, referenced strings, and confidence classifications.
+
+**Example:**
+
+```text
+rex [0x140001000]> func 140001000
+```
+
+## 15. CFG
+
+**Usage:**
+
+```text
+cfg [addr]
+graph
+```
+
+**What it does:**
+
+Generates an ASCII Control Flow Graph for the current or specified function.
+
+The diagram displays basic blocks and their control-flow relationships, including conditional branches, jump edges, fallthrough paths, and function exits.
+
+**Examples:**
+
+```text
+rex [0x140001000]> cfg
+rex [0x140001000]> cfg 140001000
+```
+
+## 16. HEX
+
+**Usage:**
+
+```text
+hex [offset] [len]
+dump
+```
+
+**What it does:**
+
+Displays a hexadecimal dump with an aligned ASCII side-pane.
+
+The optional offset selects the starting file offset, while the optional length controls how many bytes are displayed.
+
+**Examples:**
+
+```text
+rex [0x140001000]> hex
+rex [0x140001000]> hex 0 128
+```
+
+## 17. HELP
+
+**Usage:**
+
+```text
+help
+```
+
+**What it does:**
+
+Displays the interactive explorer command reference.
+
+**Example:**
+
+```text
+rex [0x140001000]> help
+```
+
+## 18. QUIT
+
+**Usage:**
+
+```text
+quit
+q
+exit
+```
+
+**What it does:**
+
+Closes the interactive explorer session and returns to the terminal.
+
+**Example:**
+
+```text
+rex [0x140001000]> quit
+```
+
+# Quick Reference
+
+## CLI Commands
+
+| Command | Description |
+|---|---|
+| `rex explore <path>` | Open interactive explorer |
+| `rex investigate <path>` | Run a full investigation |
+| `rex binary <path>` | Inspect binary structure |
+| `rex fingerprint <path>` | Identify compiler/toolchain clues |
+| `rex deps <path>` | Inspect dependencies and symbols |
+| `rex disasm <path> [--count N]` | Disassemble from entry point |
+| `rex strings <path> [--min N]` | Extract strings |
+| `rex diff <first> <second>` | Compare two binaries |
+| `rex memory <path>` | Analyze a memory dump |
+| `rex pcap <path>` | Parse a PCAP capture |
+| `rex protocol <path>` | Inspect possible protocol structure |
+| `rex carve <path>` | Find embedded file signatures |
+| `rex scan <directory>` | Scan immediate directory contents |
+| `rex search <path> <query>` | Search raw file bytes |
+| `rex history` | View investigation history |
+| `rex function <path> [--address hex]` | Analyze a specific function |
+| `rex funcs <path>` | Discover function boundaries |
+| `rex cfg <path> [--address hex]` | Generate a Control Flow Graph |
+| `rex hex <path> [--offset hex] [--length N]` | Display hexadecimal data |
+
+## Interactive Explorer Commands
+
+| Command | Shorthand | Description |
+|---|---|---|
+| `overview` | `1` | Show binary overview |
+| `sections` | `2` | List binary sections |
+| `disasm [N]` | `3` | Disassemble at current address |
+| `jump <hex>` | `goto` | Navigate to an address |
+| `xref <term>` | `xrefs` | Find references to an API or address |
+| `deps` | `4` | View dependencies and symbols |
+| `strings [filter]` | `5` | Browse extracted strings |
+| `carve` | `6` | List embedded files |
+| `findings` | `7` | View correlated findings and evidence |
+| `find <query>` | `search` | Search analysis results |
+| `mark <hex> <note>` | `bookmark` | Save a persistent address bookmark |
+| `marks` | `bookmarks` | List saved bookmarks |
+| `funcs` | `functions` | Browse discovered functions |
+| `func [addr]` | `fn` | Run function-level analysis |
+| `cfg [addr]` | `graph` | Generate an ASCII Control Flow Graph |
+| `hex [offset] [len]` | `dump` | Display hexadecimal and ASCII data |
+| `help` | — | Show explorer help |
+| `quit` | `q`, `exit` | Exit the explorer |
+
+# Notes
+
+- REX is an analysis toolkit. Several outputs, including entropy-based packing classifications, memory-region classifications, function boundary estimates, and protocol structure hypotheses, are heuristic and should be interpreted as indicators rather than definitive conclusions.
+- API behavioral categories describe recognized API functionality and do not independently prove that a particular behavior occurs.
+- Evidence Chains explain which available indicators contribute to an inference. Their conclusions should still be evaluated against the underlying data.
+- Bookmarks are stored in `.rex_bookmarks.json` in the working directory and persist between explorer sessions.
+- PCAP parsing and PCAPNG parsing are not interchangeable. The pcap command currently describes legacy PCAP capture parsing.
+- Directory scanning currently covers files directly inside the supplied directory, not nested subdirectories.
+- Markdown, HTML, and CSV output formats are implemented for full investigations. Other commands may use plain-text output when a requested format is not supported.
